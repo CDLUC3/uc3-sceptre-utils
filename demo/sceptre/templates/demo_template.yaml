@@ -1,0 +1,25 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Demo template for testing sceptre hooks
+Parameters:
+  DomainName:
+    Type: String
+#  HostedZoneId:
+#    Type: String
+
+Outputs:
+  LogBucket:
+    Description: S3 log bucket for demo stack
+    Value: !Ref S3LogBucket
+  HostedZoneDomainName:
+    Description: value of param via sceptre var-file
+    Value: !Ref DomainName
+
+Resources:
+  # S3 Bucket to store logs from services like CloudFront (not publicly accessible)
+  S3LogBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub demo-log-bucket-${DomainName}
+      PublicAccessBlockConfiguration:
+        IgnorePublicAcls: true
+

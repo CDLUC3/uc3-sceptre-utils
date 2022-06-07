@@ -13,7 +13,7 @@ setup(
             's3_bucket = uc3_sceptre_utils.hooks.s3_bucket:S3Bucket',
         ],
         'sceptre.resolvers': [
-            'certificate_arn = uc3_sceptre_utils.resolvers.certificate_arn:CertificateArn',
+            'acm_certificate_arn = uc3_sceptre_utils.resolvers.acm_certificate_arn:AcmCertificateArn',
             'package_version = uc3_sceptre_utils.resolvers.package_version:PackageVersion',
         ],
     },

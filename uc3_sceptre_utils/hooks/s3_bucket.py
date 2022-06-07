@@ -3,7 +3,7 @@ import sys
 import boto3
 
 from sceptre.hooks import Hook
-from sceptre.cli import setup_logging
+from sceptre.cli.helpers import setup_logging
 from sceptre.exceptions import SceptreException
 from sceptre.exceptions import InvalidHookArgumentSyntaxError
 

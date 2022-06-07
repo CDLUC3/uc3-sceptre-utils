@@ -1,0 +1,17 @@
+template:
+  path: demo_template.yaml
+  type: file
+parameters:
+  DomainName: {{ var.hosted_zone_domain_name }}
+
+  #hooks:
+  #  before_create:
+  #    - !acm_certificate action=request \
+  #      cert_fqdn=blee00.{{ var.hosted_zone_domain_name }} \
+  #      subalt_names=www.blee.{{ var.hosted_zone_domain_name }},blee.{{ var.hosted_zone_domain_name }} \
+  #      validation_domain={{ var.hosted_zone_domain_name }} \
+  #      region=us-west-1
+
+hooks:
+  before_create:
+    - !acm_certificate action=request cert_fqdn=blee00.{{ var.hosted_zone_domain_name }} subalt_names=www.blee.{{ var.hosted_zone_domain_name }},blee.{{ var.hosted_zone_domain_name }} validation_domain={{ var.hosted_zone_domain_name }} region=us-west-1

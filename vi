@@ -1,0 +1,81 @@
+3 files to edit
+[?2004h[?1049h[22;0;0t[?1h=[?2004h[1;52r[?12h[?12l[27m[23m[29m[m[H[2J[?25l[52;1H".gitignore" 38L, 380C[1;1H[34m### Vim ###
+# Swap[m
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+
+[34m# Byte-compiled / optimized / DLL files[m
+__pycache__/
+*.py[cod]
+*$py.class
+
+[34m# C extensions[m
+*.so
+
+[34m# Distribution / packaging[m
+.Python
+env/
+venv/
+.venv/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+.python-version
+
+
+[1m[34m~                                                                                                       [40;1H~                                                                                                       [41;1H~                                                                                                       [42;1H~                                                                                                       [43;1H~                                                                                                       [44;1H~                                                                                                       [45;1H~                                                                                                       [46;1H~                                                                                                       [47;1H~                                                                                                       [48;1H~                                                                                                       [49;1H~                                                                                                       [50;1H~                                                                                                       [51;1H~                                                                                                       [m[52;87H38,0-1[8CAll[38;1H[?25h[?25l[52;88H7[37;1H[?25h[?25l[52;88H6,15 [36;15H[?25h[?25l[52;91H4[36;14H[?25h[?25l[52;91H3[36;13H[?25h[?25l[52;91H2[36;12H[?25h[?25l[52;91H1[36;11H[?25h[?25l[52;91H0[36;10H[?25h[?25l[52;90H9 [36;9H[?25h[?25l[52;90H8[36;8H[?25h[?25l[52;90H7[36;7H[?25h[?25l[52;90H6[36;6H[?25h[?25l[52;90H5[36;5H[?25h[?25l[52;90H4[36;4H[?25h[?25l[52;90H3[36;3H[?25h[?25l[52;90H2[36;2H[?25h[?25l[52;90H1[36;1H[?25h[?25l[52;88H5,5[35;5H[?25h[?25l[52;1HType  :qa!  and press <Enter> to abandon all changes and exit Vim[52;87H[K[52;87H35,5[10CAll[35;5H[?25h[?25l[52;88H6,1[36;1H[?25h[?25l[52;87H[K[52;87H36,1[10CAll[36;1H[?25h[?25l[52;88H7,0-1[37;1H[?25h[?25l[52;88H8[38;1H[?25h[?25l[38;1H[?25h[?25l[38;1H[?25h[52;1H
+[?2004l[?1l>[?1049l[23;0;0t[?2004l[?2004h[?1049h[22;0;0t[?1h=[?2004h[?12h[?12l[27m[23m[29m[m[H[2J[?25l[1;1H[34m### Vim ###
+# Swap[m
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+
+[34m# Byte-compiled / optimized / DLL files[m
+__pycache__/
+*.py[cod]
+*$py.class
+
+[34m# C extensions[m
+*.so
+
+[34m# Distribution / packaging[m
+.Python
+env/
+venv/
+.venv/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+.python-version
+
+
+[1m[34m~                                                                                                       [40;1H~                                                                                                       [41;1H~                                                                                                       [42;1H~                                                                                                       [43;1H~                                                                                                       [44;1H~                                                                                                       [45;1H~                                                                                                       [46;1H~                                                                                                       [47;1H~                                                                                                       [48;1H~                                                                                                       [49;1H~                                                                                                       [50;1H~                                                                                                       [51;1H~                                                                                                       [m[52;87H38,0-1[8CAll[38;1H[?25h[?25l[38;1H[?25h[52;1H[?2004l[?1l>[?1049l[23;0;0tVim: Caught deadly signal TERM
+Vim: Finished.
+[52;1H
