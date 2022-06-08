@@ -43,38 +43,36 @@ def get_cert_object(cert_fqdn, region=DEFAULT_REGION):
 
 def request_cert(cert_fqdn, subalt_names, validation_domain, region=DEFAULT_REGION):
     """
-    Create a ACM certificate request.  Determine the certificate
-    validation method by checking if the validation_domain matches a
-    route53 hosted zone in this account.  DNS if yes.  Email if no.
-    When validation method is DNS, create validation record set in
-    route53.
+    Create a ACM certificate request.  Create validation record set in route53.
+    'validation_domain' must match a valid Route53 HostedZone. 
     """
     hosted_zone_id = route53.get_hosted_zone_id(validation_domain, region)
-    if hosted_zone_id:
+    if hosted_zone_id is not None:
         validation_method = 'DNS'
     else:
-        validation_method = 'EMAIL'
+        raise RuntimeError(
+                "No Route53 HostedZone matches 'validation_domain: {}".format(validation_domain))
     acm_client = boto3.client('acm', region_name=region)
+    domain_validation_options = [
+            dict(DomainName=cert_fqdn, ValidationDomain=validation_domain)]
+    for domain in subalt_names:
+        domain_validation_options.append(dict(DomainName=domain, ValidationDomain=validation_domain))
     response = acm_client.request_certificate(
         DomainName=cert_fqdn,
         ValidationMethod=validation_method,
         SubjectAlternativeNames=subalt_names,
         IdempotencyToken='request_cert',
-        DomainValidationOptions=[{
-            'DomainName': cert_fqdn,
-            'ValidationDomain': validation_domain,
-        }]
+        DomainValidationOptions=domain_validation_options,
     )
     arn = response['CertificateArn']
-    if validation_method == 'DNS':
+    cert = acm_client.describe_certificate(CertificateArn=arn)['Certificate']
+    while 'ResourceRecord' not in cert['DomainValidationOptions'][0]:
+        time.sleep(5)
         cert = acm_client.describe_certificate(CertificateArn=arn)['Certificate']
-        while 'ResourceRecord' not in cert['DomainValidationOptions'][0]:
-            time.sleep(5)
-            cert = acm_client.describe_certificate(CertificateArn=arn)['Certificate']
-        cert_validation_record_set(
-            cert['DomainValidationOptions'][0]['ResourceRecord'],
-            validation_domain
-        )
+    cert_validation_record_set(
+        cert['DomainValidationOptions'][0]['ResourceRecord'],
+        validation_domain
+    )
 
 
 def delete_cert(cert_arn, region=DEFAULT_REGION):

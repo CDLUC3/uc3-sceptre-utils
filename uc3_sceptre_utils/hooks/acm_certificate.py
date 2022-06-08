@@ -1,4 +1,38 @@
 # -*- coding: utf-8 -*-
+"""
+A sceptre hook to generate and validate AWS ACM certificates.
+
+Required keyword arguments:
+
+:action:            The action to perform.  Must be one of: "request" or "delete".
+:cert_fqdn:         The domain name of the requested certificate.
+:validation_domain: The DNS domain that validates this certificate request.  This must
+                    match the domain of a valid AWS Route53 HostedZone.
+:region:            The AWS region in which to create the certificate.
+
+Optional Keyword arguments:
+
+:subalt_names:      Additional subject alternative names for the certificate.
+                    This can be a comma separated list of domain names.
+
+Example sceptre config usage:
+
+hooks:
+  before_create:
+    - !acm_certificate
+        action: request
+        cert_fqdn: ashley-demo.example.com
+        validation_domain: example.com
+        region: us-east-1
+        subalt_names: www.ashley-demo.example.com,adem.example.com
+  after_delete:
+    - !acm_certificate
+        action: delete
+        cert_fqdn: ashley-demo.example.com
+        validation_domain: example.com
+        region: us-east-1
+"""
+
 import sys
 import time
 import re
@@ -6,18 +40,17 @@ import re
 from sceptre.cli.helpers import setup_logging
 from sceptre.hooks import Hook
 from sceptre.exceptions import InvalidHookArgumentSyntaxError
-from uc3_sceptre_utils.util import acm
+from uc3_sceptre_utils.util import acm, route53
 
 
 class AcmCertificate(Hook):
-    """
-    A sceptre hook to generate and validate AWS ACM certificates.
-    """
-
     def __init__(self, *args, **kwargs):
         super(AcmCertificate, self).__init__(*args, **kwargs)
 
-    def handle_cert_request(self, cert_fqdn, subalt_names, validation_domain, region):
+    def _usage(self):
+        print(__doc__)
+
+    def _handle_cert_request(self, cert_fqdn, subalt_names, validation_domain, region):
         """
         Handle certificate request process.  Allow time for cert to be
         auto-signed.  Times out after 5 minutes.
@@ -31,90 +64,56 @@ class AcmCertificate(Hook):
             cert = acm.get_cert_object(cert_fqdn, region)
             if cert['Status'] != 'ISSUED':
                 tries += 1
-                self.logger.debug('{} - Request status: {}'.format(
+                self.logger.info('{} - Request status: {}'.format(
                     __name__, cert['Status'])
                 )
             else:
                 break
-        self.logger.debug('{} - Cert: {} - Status: {}'.format(
+        self.logger.info('{} - Cert: {} - Status: {}'.format(
             __name__, cert_fqdn, cert['Status'])
         )
         return
 
     def run(self):
-        """
-        Create a ACM certificate request.  Determine the certificate
-        validation method by checking if the validation_domain matches a
-        route53 hosted zone in this account.  DNS if yes.  Email if no.
-        When validation method is DNS, create validation record set in
-        route53.
-
-        self.argument is parsed as a string of keyword args.
-        After parsing, the following keywords are accepted:
-
-        :action:            The action to perform.  Must be one of:
-                            "request" or "delete".
-        :cert_fqdn:         The domain name of the certificate requested.
-        :subalt_names:      Additional subject alternative names for the certificate.
-                            This can be a comma separated list of domain names.
-        :validation_domain: The domain that validates this certificate request.
-        :region:            The AWS region in which to create the certificate.
-
-        Example sceptre config usage:
-
-        hooks:
-          before_create:
-            - !acm_certificate action=request \
-                cert_fqdn=ashley-demo.example.com \
-                subalt_names=www.ashley-demo.example.com,adem.example.com \
-                validation_domain=example.com \
-                region=us-east-1
-          after_delete:
-            - !acm_certificate action=delete \
-                cert_fqdn=ashley-demo.example.com \
-                validation_domain=example.com \
-                region=us-east-1
-        """
-
         # parse self.argument string
-        kwargs = dict()
-        for item in self.argument.split():
-            k, v = item.split('=')
-            kwargs[k] = v
+        self.logger.info('{} - self.argument: {}'.format(__name__, self.argument))
         required_args = ['action', 'cert_fqdn', 'validation_domain', 'region']
         missing = []
         for arg in required_args:
-            if arg not in kwargs:
+            if arg not in self.argument:
                 missing.append(arg)
         if missing:
+            self._usage()
             raise InvalidHookArgumentSyntaxError(
-                '{}: required kwargs not found: {}'.format(__name__, missing)
-            )
-        if 'subalt_names' in kwargs:
-            subalt_names = kwargs['subalt_names'].split(',')
+                '{}: some required keyword arguments are missing: {}'.format(__name__, missing))
+        if 'subalt_names' in self.argument:
+            subalt_names = self.argument['subalt_names'].split(',')
         else:
             subalt_names = []
-        action = kwargs['action']
-        cert_fqdn = kwargs['cert_fqdn']
-        validation_domain = kwargs['validation_domain']
-        region = kwargs['region']
+        action = self.argument['action']
+        cert_fqdn = self.argument['cert_fqdn']
+        validation_domain = self.argument['validation_domain']
+        region = self.argument['region']
+        self.logger.info('{} -  parsed args:- action: {}, cert_fqdn: {}, subalt_names: {}, validation_domain: {}, region: {}'.format(__name__, action, cert_fqdn, subalt_names, validation_domain, region))
 
         # determine certificate status and handle accordingly
         cert = acm.get_cert_object(cert_fqdn, region)
+        if cert is not None:
+            self.logger.info('{} - get_cert_object - cert: {}'.format( __name__, cert))
         if action == 'request':
             if not cert:
-                self.logger.debug('{} - Requesting certificate for {}'.format(
+                self.logger.info('{} - Requesting certificate for {}'.format(
                     __name__, cert_fqdn)
                 )
-                self.handle_cert_request(cert_fqdn, subalt_names, validation_domain, region)
+                self._handle_cert_request(cert_fqdn, subalt_names, validation_domain, region)
 
             elif cert['Status'] == 'ISSUED':
-                self.logger.debug('{} - Cert: {} - Status: {}'.format(
+                self.logger.info('{} - Cert: {} - Status: {}'.format(
                     __name__, cert_fqdn, cert['Status'])
                 )
 
             elif cert['Status'] == 'PENDING_VALIDATION':
-                self.logger.debug('{} - Cert: {} - Status: {}'.format(
+                self.logger.info('{} - Cert: {} - Status: {}'.format(
                     __name__, cert_fqdn, cert['Status'])
                 )
                 if ("ValidationMethod" in cert["DomainValidationOptions"] and
@@ -122,17 +121,17 @@ class AcmCertificate(Hook):
                     acm.request_validation(cert, validation_domain, region)
 
             elif cert['Status'] == 'VALIDATION_TIMED_OUT':
-                self.logger.debug('{} - Cert: {} - Status: {}'.format(
+                self.logger.info('{} - Cert: {} - Status: {}'.format(
                     __name__, cert_fqdn, cert['Status'])
                 )
-                self.logger.debug('{} - Deleting certificate: {}'.format(
+                self.logger.info('{} - Deleting certificate: {}'.format(
                     __name__, cert['CertificateArn'])
                 )
                 acm.delete_cert(cert['CertificateArn'], region=region)
-                self.logger.debug('{} - Re-requesting certificate: {}'.format(
+                self.logger.info('{} - Re-requesting certificate: {}'.format(
                     __name__, cert_fqdn)
                 )
-                self.handle_cert_request(cert_fqdn, subalt_names, validation_domain, region)
+                self._handle_cert_request(cert_fqdn, subalt_names, validation_domain, region)
 
             elif cert['Status'] == 'FAILED':
                 raise RuntimeError('ACM certificate request failed: {}'.format(
@@ -147,7 +146,7 @@ class AcmCertificate(Hook):
 
         elif action == 'delete':
             if cert:
-                self.logger.debug('{} - Deleting certificate: {}'.format(
+                self.logger.info('{} - Deleting certificate: {}'.format(
                     __name__, cert['CertificateArn'])
                 )
                 acm.delete_cert(cert['CertificateArn'], region=region)
@@ -156,7 +155,7 @@ class AcmCertificate(Hook):
             if not cert_fqdn.endswith('.'):
                 cert_fqdn += '.'
             validation_cname_pattern=re.compile(r'_\w{32}\.' + re.escape(cert_fqdn))
-            record_set = acm.get_resource_record_set(
+            record_set = route53.get_resource_record_set(
                 hosted_zone=validation_domain,
                 record_type='CNAME',
                 pattern=validation_cname_pattern,
@@ -166,10 +165,10 @@ class AcmCertificate(Hook):
                 'found matching "{}"'.format(cert_fqdn)
             )
             if record_set:
-                self.logger.debug('{} - Deleting route53 certificate validation '
+                self.logger.info('{} - Deleting route53 certificate validation '
                     'CNAME: {}'.format(__name__, cert_fqdn)
                 )
-                acm.change_record_set(record_set, validation_domain, 'DELETE')
+                route53.change_record_set(record_set, validation_domain, 'DELETE')
 
         else:
             raise InvalidHookArgumentSyntaxError(
