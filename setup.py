@@ -15,6 +15,7 @@ setup(
         'sceptre.resolvers': [
             'acm_certificate_arn = uc3_sceptre_utils.resolvers.acm_certificate_arn:AcmCertificateArn',
             'package_version = uc3_sceptre_utils.resolvers.package_version:PackageVersion',
+            'hosted_zone_id = uc3_sceptre_utils.resolvers.hosted_zone_id:HostedZoneId',
         ],
     },
 )

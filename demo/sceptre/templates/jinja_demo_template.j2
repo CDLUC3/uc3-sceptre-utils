@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Demo jinja template for testing sceptre hooks
+
+Outputs:
+  S3Bucket:
+    Description: S3 log bucket for demo stack
+    Value: !Ref DemoS3Bucket
+  AcmCertificateArn:
+    Description: ARN of the generated ACM Certificate
+    Value: !Ref DemoCertificate
+
+Resources:
+  DemoS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub demo--bucket-${AWS::AccountId}
+      PublicAccessBlockConfiguration:
+        IgnorePublicAcls: true
+
+  DemoCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties: 
+      DomainName: {{ sceptre_user_data.domain_name }}
+      ValidationMethod: DNS
+      DomainValidationOptions: 
+        - DomainName: {{ sceptre_user_data.domain_name }}
+          HostedZoneId: {{ sceptre_user_data.hosted_zone_id }}
+      {% if sceptre_user_data.subalt_names is defined %}
+      SubjectAlternativeNames:
+        {% for subalt_name in sceptre_user_data.subalt_names.split(',') %}
+        - {{ subalt_name }}
+        {% endfor %}        
+      {% endif %}

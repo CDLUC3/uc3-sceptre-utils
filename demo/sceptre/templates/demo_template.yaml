@@ -3,23 +3,46 @@ Description: Demo template for testing sceptre hooks
 Parameters:
   DomainName:
     Type: String
-#  HostedZoneId:
-#    Type: String
+  SubjectAlternativeNames:
+    #Type: CommaDelimitedList
+    Type: String
+    Default: 'none'
+  HostedZoneId:
+    Type: String
+
+Conditions:
+  SubjectAlternativeNamesEmpty:
+    !Equals
+      - !Ref SubjectAlternativeNames
+      - 'none'
+
 
 Outputs:
-  LogBucket:
+  S3Bucket:
     Description: S3 log bucket for demo stack
-    Value: !Ref S3LogBucket
-  HostedZoneDomainName:
-    Description: value of param via sceptre var-file
-    Value: !Ref DomainName
+    Value: !Ref DemoS3Bucket
+  AcmCertificateArn:
+    Description: ARN of the generated ACM Certificate
+    Value: !Ref DemoCertificate
 
 Resources:
-  # S3 Bucket to store logs from services like CloudFront (not publicly accessible)
-  S3LogBucket:
+  DemoS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub demo-log-bucket-${DomainName}
+      BucketName: !Sub demo--bucket-${AWS::AccountId}
       PublicAccessBlockConfiguration:
         IgnorePublicAcls: true
 
+  DemoCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties: 
+      DomainName: !Ref DomainName
+      DomainValidationOptions: 
+        - DomainName: !Ref DomainName
+          HostedZoneId: !Ref HostedZoneId
+      SubjectAlternativeNames:
+        - !If
+          - SubjectAlternativeNamesEmpty
+          - !Ref AWS::NoValue
+          - !Ref SubjectAlternativeNames
+      ValidationMethod: DNS
