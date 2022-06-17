@@ -1,0 +1,11 @@
+---
+# demo use of !hosted_zone_id resolver
+
+template:
+  path: acm_certificate.j2
+  type: file
+
+sceptre_user_data:
+  domain_name: {{ var.domain_name }}
+  hosted_zone_id: !hosted_zone_id {{ var.hosted_zone }}
+  subalt_names: {{ var.subalt_names | default('!novalue') }}

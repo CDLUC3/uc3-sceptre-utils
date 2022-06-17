@@ -1,0 +1,10 @@
+---
+# Demo resolver ssm_parameter
+
+template:
+  path: s3_bucket.yaml
+  type: file
+
+parameters:
+  MyBucketName: !ssm_parameter {{ var.ssm_parameter_name | default('!novalue') }}
+

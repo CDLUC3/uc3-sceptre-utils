@@ -1,22 +1,16 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Demo jinja template for testing sceptre hooks
+Description: jinja template for generating ACM Certificate
+
+# Currently only works when no subalt_names are specified
+# Cloudformation times out before subalt names can be validated
+
 
 Outputs:
-  S3Bucket:
-    Description: S3 log bucket for demo stack
-    Value: !Ref DemoS3Bucket
   AcmCertificateArn:
     Description: ARN of the generated ACM Certificate
     Value: !Ref DemoCertificate
 
 Resources:
-  DemoS3Bucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub demo--bucket-${AWS::AccountId}
-      PublicAccessBlockConfiguration:
-        IgnorePublicAcls: true
-
   DemoCertificate:
     Type: AWS::CertificateManager::Certificate
     Properties: 

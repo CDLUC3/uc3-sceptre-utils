@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Demo template to create a S3 bucket
+
+Parameters:
+  MyBucketName:
+    Type: String
+    Default: "demo-bucket"
+
+Outputs:
+  S3Bucket:
+    Description: S3 log bucket for demo stack
+    Value: !Ref DemoS3Bucket
+
+Resources:
+  DemoS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${MyBucketName}-${AWS::AccountId}"
+      PublicAccessBlockConfiguration:
+        IgnorePublicAcls: true
