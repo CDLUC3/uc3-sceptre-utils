@@ -43,7 +43,7 @@ class PasswordGenerator(Resolver):
 
         if allow_chars.lower() == 'true':
           # Use a limited subset of special chars since many DB systems have reserved chars
-          chars = chars + '~!@#$^&*_-+=|:'
+          chars = chars + '~!#$^&*_-+=|:'
 
         password = ''.join(random.choice(chars) for i in range(size))
         print("Generated random password of length ", size, " is: ", password)
