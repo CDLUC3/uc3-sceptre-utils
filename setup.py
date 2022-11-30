@@ -11,6 +11,7 @@ setup(
             'ecs_task_exec_role = uc3_sceptre_utils.hooks.ecs_task_exec_role:ECSTaskExecRole',
             'route53_hosted_zone = uc3_sceptre_utils.hooks.route53:Route53HostedZone',
             's3_bucket = uc3_sceptre_utils.hooks.s3_bucket:S3Bucket',
+            'sam_deploy = uc3_sceptre_utils.hooks.sam_deploy:SamDeploy',
         ],
         'sceptre.resolvers': [
             'acm_certificate_arn = uc3_sceptre_utils.resolvers.acm_certificate_arn:AcmCertificateArn',
