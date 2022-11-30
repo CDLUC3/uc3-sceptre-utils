@@ -25,7 +25,7 @@ class DockerToEcr(Hook):
     :region:   Optional. The AWS region. The default is us-west-2.
 
     Example:
-        !docker_to_ecr ecr_name=my-ecr ecr_uri=01234567.dkr.ecr.us-west-2.amazonaws.com/my-ecr location=src/my_app
+        !docker_to_ecr ecr_name=/uc3/svc/sub-svc/env/EcrName ecr_uri=/uc3/svc/sub-svc/env/EcrUri location=src/my_app
 
     Note this hook requires Docker to be installed and its daemon should be running.
     """
@@ -76,7 +76,7 @@ class DockerToEcr(Hook):
 def main():
     """
     test docker_to_ecr hook actions:
-        python ./docker_to_ecr ecr_name=my-ecr ecr_uri=1234567.dkr.ecr.us-west-2.amazonaws.com/my-ecr location=src/my_app
+        python ./docker_to_ecr ecr_name=/uc3/svc/sub-svc/env/EcrName ecr_uri=/uc3/svc/sub-svc/env/EcrUri location=src/my_app
     """
 
     request = DockerToEcr(argument=' '.join(sys.argv[1:]))
