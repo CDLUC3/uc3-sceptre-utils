@@ -8,6 +8,7 @@ from sceptre.hooks import Hook
 from sceptre.exceptions import InvalidHookArgumentSyntaxError
 
 DEFAULT_REGION = 'us-west-2'
+DEFAULT_ECR_TAG_PREFIX = 'latest'
 
 class DockerToEcr(Hook):
     """
@@ -16,16 +17,18 @@ class DockerToEcr(Hook):
     self.argument is parsed as a string of keyword args.
     After parsing, the following keywords are accepted:
 
-    :ecr_name: Required. SSM key for the parameter containing the ECR name (e.g. /uc3/dmp/hub/dev/EcrName).
-                         Example parameter value: 'my-ecr'
-    :ecr_uri:  Required. SSM key for the parameter containing the ECR URI (e.g. /uc3/dmp/hub/dev/EcrUri).
-                         Example parameter value: '01234567.dkr.ecr.us-west-2.amazonaws.com/my-ecr'
-    :location: Required. The location of the folder, from wihtin the project dir, that contains the
+    :dockerfile_dir: Required. The location of the folder, from wihtin the project dir, that contains the
                          Dockerfile. (e.g. src/my_app)
-    :region:   Optional. The AWS region. The default is us-west-2.
+    :ssm_path:       Required. The SSM path where we will find our other variables (e.g. /uc3/dmp/hub/dev/)
+    :ecr_name:       Required. SSM key for the parameter containing the ECR name (e.g. EcrName).
+                         Example parameter value: 'my-ecr'
+    :ecr_uri:        Required. SSM key for the parameter containing the ECR URI (e.g. EcrUri).
+                         Example parameter value: '01234567.dkr.ecr.us-west-2.amazonaws.com/my-ecr'
+    :ecr_tag_prefix: Optional. The ECR tag prefix. Default is 'latest'
+    :region:         Optional. The AWS region. Default is 'us-west-2'
 
     Example:
-        !docker_to_ecr ecr_name=/uc3/svc/sub-svc/env/EcrName ecr_uri=/uc3/svc/sub-svc/env/EcrUri location=src/my_app
+        !docker_to_ecr dockerfile_dir=src/my_app ssm_path=/uc3/dmp/hub/env/ ecr_name=EcrName ecr_uri=EcrUri
 
     Note this hook requires Docker to be installed and its daemon should be running.
     """
@@ -38,7 +41,7 @@ class DockerToEcr(Hook):
         for item in self.argument.split():
             k, v = item.split('=')
             kwargs[k] = v
-        required_args = ['ecr_name', 'ecr_uri', 'location']
+        required_args = ['dockerfile_dir', 'ssm_path', 'ecr_name', 'ecr_uri']
         for arg in required_args:
             if not arg in kwargs:
                 raise InvalidHookArgumentSyntaxError(
@@ -46,37 +49,53 @@ class DockerToEcr(Hook):
                 )
 
         region = kwargs.get('region', DEFAULT_REGION)
-        ecr_name = self.fetch_ssm_parameter(kwargs['ecr_name'])
-        ecr_uri = self.fetch_ssm_parameter(kwargs['ecr_uri'])
+        ecr_tag_prefix = kwargs.get('ecr_tag_prefix', DEFAULT_ECR_TAG_PREFIX)
+
+        ecr_name = self.fetch_ssm_parameter(kwargs['ssm_path'], kwargs['ecr_name'])
+        ecr_uri = self.fetch_ssm_parameter(kwargs['ssm_path'], kwargs['ecr_uri'])
         ecr_short_uri = ecr_uri.replace(ecr_name, '').split('/')[0]
 
-        print('{}: Logging into ECR ...'.format(__name__))
-        os.system('aws ecr get-login-password --region {} | docker login --username AWS --password-stdin {}'.format(region, ecr_short_uri))
+        print('{}: Logging into ECR {} ...'.format(__name__, ecr_short_uri))
+        logged_in = os.system('aws ecr get-login-password --region {} | docker login --username AWS --password-stdin {}'.format(region, ecr_short_uri))
 
-        cwd = subprocess.run('pwd', stdout=subprocess.PIPE, text=True)
-        lambda_path = os.path.join(cwd.stdout.strip(), kwargs['location'])
+        print('NAME: {}, URI: {}'.format(ecr_name, ecr_uri))
 
-        print("{}: Building Docker image in: {} ...".format(__name__, lambda_path))
-        os.chdir(lambda_path)
-        os.system('docker build -t {} .'.format(ecr_name))
-        os.system('docker tag {}:latest {}:latest'.format(ecr_name, ecr_uri))
+        if logged_in == 0:
+            cwd = subprocess.run('pwd', stdout=subprocess.PIPE, text=True)
+            dockerfile_path = os.path.join(cwd.stdout.strip(), kwargs['dockerfile_dir'])
 
-        print("{}: Pushing Docker image to ECR: {}:latest ...".format(__name__, ecr_uri))
-        os.system('docker push {}:latest'.format(ecr_uri))
+            print("{}: Building Docker image in: {} ...".format(__name__, dockerfile_path))
+            os.chdir(dockerfile_path)
+            built = os.system('docker build -t {} .'.format(ecr_name))
 
-    def fetch_ssm_parameter(_self, key):
+            if built == 0:
+                os.system('docker tag {}:{} {}:{}'.format(ecr_name, ecr_tag_prefix, ecr_uri, ecr_tag_prefix))
+
+                print("{}: Pushing Docker image to ECR: {}:{} ...".format(__name__, ecr_uri, ecr_tag_prefix))
+                os.system('docker push {}:{}'.format(ecr_uri, ecr_tag_prefix))
+            else:
+                print('{} - Unable to build Docker image. Cannot upload to ECR until this has been fixed!'.format(__name__))
+        else:
+            print('{} - Unable to login to ECR! Make sure your AWS credentials are set.'.format(__name__))
+
+    def fetch_ssm_parameter(_self, base_path, key):
       ssm = boto3.client('ssm')
+
+      ssm_path_parts = base_path.strip().split('/')
+      ssm_path_parts.append(key)
+      key_name = '/'.join(ssm_path_parts).replace('//', '/')
+
       try:
-          response = ssm.get_parameter(Name=key, WithDecryption=True)
+          response = ssm.get_parameter(Name=key_name, WithDecryption=True)
       except Exception:
-          print('{} - parameter name not found: {}'.format(__name__, key))
+          print('{} - parameter name not found: {}'.format(__name__, key_name))
           return None
       return response['Parameter']['Value']
 
 def main():
     """
     test docker_to_ecr hook actions:
-        python ./docker_to_ecr ecr_name=/uc3/svc/sub-svc/env/EcrName ecr_uri=/uc3/svc/sub-svc/env/EcrUri location=src/my_app
+        python !docker_to_ecr dockerfile_dir=src/my_app ssm_path=/uc3/dmp/hub/env/ ecr_name=EcrName ecr_uri=EcrUri
     """
 
     request = DockerToEcr(argument=' '.join(sys.argv[1:]))
