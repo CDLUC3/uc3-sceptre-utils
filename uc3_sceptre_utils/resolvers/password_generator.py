@@ -46,5 +46,5 @@ class PasswordGenerator(Resolver):
           chars = chars + '~!#$^&*_-+=|:'
 
         password = ''.join(random.choice(chars) for i in range(size))
-        print("Generated random password of length ", size, " is: ", password)
+        print('{} - Generated random password: {}'.format(__name__, password))
         return password
