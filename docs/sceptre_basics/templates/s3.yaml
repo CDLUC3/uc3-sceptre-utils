@@ -1,0 +1,58 @@
+# ----------------------------------------------
+# Simple Storage Service (S3) buckets
+#   See: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-bucket.html
+# ----------------------------------------------
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'S3 buckets'
+
+Parameters:
+  LogBucketObjectLifeSpan:
+    Type: 'Number'
+    Default: 30
+
+Resources:
+  # S3 Bucket to store access logs for our other S3 bucket
+  S3LogBucket:
+    Type: 'AWS::S3::Bucket'
+    DeletionPolicy: Delete
+    Properties:
+      LifecycleConfiguration:
+        Rules:
+          - ExpirationInDays: !Ref LogBucketObjectLifeSpan
+            Status: 'Enabled'
+      AccessControl: 'Private'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  # S3 Bucket for storing things that should not be publicly accessible like CodePipeline artifacts
+  S3PrivateBucket:
+    Type: 'AWS::S3::Bucket'
+    DeletionPolicy: Retain
+    Properties:
+      AccessControl: 'Private'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LoggingConfiguration:
+        DestinationBucketName: !Ref S3LogBucket
+        LogFilePrefix: 's3-access'
+
+Outputs:
+  S3LogBucketId:
+    Value: !Ref S3LogBucket
+  S3LogBucketUri:
+    Value: !Sub "s3://${S3LogBucket}"
+  S3LogBucketArn:
+    Value: !GetAtt S3LogBucket.Arn
+
+  S3PrivateBucketId:
+    Value: !Ref S3PrivateBucket
+  S3PrivateBucketUri:
+    Value: !Sub "s3://${S3PrivateBucket}"
+  S3PrivateBucketArn:
+    Value: !GetAtt S3PrivateBucket.Arn

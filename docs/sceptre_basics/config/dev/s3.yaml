@@ -1,0 +1,6 @@
+template:
+  path: s3.yaml
+  type: file
+
+parameters:
+  LogBucketObjectLifeSpan: '30'

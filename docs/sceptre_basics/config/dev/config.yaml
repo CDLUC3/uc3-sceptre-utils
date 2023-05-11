@@ -1,0 +1,6 @@
+# Stack tags are attached to every AWS resource created by these CloudFormation templates
+# with the exception of the Lambda functions and layers which are managed by AWS SAM.
+stack_tags:
+  Program: 'uc3'
+  Service: 'sceptre-basics'
+  Environment: 'dev'
