@@ -30,14 +30,13 @@ Resources:
   # S3 Bucket for storing things that should not be publicly accessible like CodePipeline artifacts
   S3PrivateBucket:
     Type: 'AWS::S3::Bucket'
-    DeletionPolicy: Retain
     Properties:
       AccessControl: 'Private'
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
         IgnorePublicAcls: true
-        RestrictPublicBuckets: true
+        RestrictPublicBuckets: false
       LoggingConfiguration:
         DestinationBucketName: !Ref S3LogBucket
         LogFilePrefix: 's3-access'
