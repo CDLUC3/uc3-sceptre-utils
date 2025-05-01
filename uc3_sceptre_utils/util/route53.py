@@ -2,15 +2,14 @@
 import boto3
 from uc3_sceptre_utils.util import DEFAULT_REGION
 
+import json
 
 def get_hosted_zone_id(domain_name, region=DEFAULT_REGION):
     """
-    Return the hosted zoned Id corresponding to 'domain_name'.
+    Return hostedZoneId for a public hosted zone corresponding to 'domain_name'.
     """
     route53_client = boto3.client('route53', region_name=region)
-    response = route53_client.list_hosted_zones(
-        HostedZoneType='PrivateHostedZone'
-    )
+    response = route53_client.list_hosted_zones()
     hosted_zones = response["HostedZones"]
     while response["IsTruncated"]:
         response = route53_client.list_hosted_zones(
@@ -20,12 +19,10 @@ def get_hosted_zone_id(domain_name, region=DEFAULT_REGION):
     if not domain_name.endswith("."):
         domain_name += "."
     hosted_zone_ids = [
-        zone['Id'] for zone in hosted_zones if zone['Name'] == domain_name
-    ]
-    if len(hosted_zone_ids) > 1:
-        raise RuntimeError(
-            "Found multiple matching hosted zones: {}".format(hosted_zone_ids)
+        zone['Id'] for zone in hosted_zones if (
+            zone['Name'] == domain_name and zone['Config']['PrivateZone'] == False
         )
+    ]
     if len(hosted_zone_ids) < 1:
         return None
     return hosted_zone_ids[0].split("/")[2]
