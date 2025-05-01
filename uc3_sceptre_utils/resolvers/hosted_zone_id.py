@@ -6,7 +6,7 @@ from uc3_sceptre_utils.util import route53, DEFAULT_REGION
 
 class HostedZoneId(Resolver):
     """
-    Returns a AWS Route53 hosted zond Id given a domain name and a
+    Returns a AWS Route53 public hosted zone Id given a domain name and a
     AWS region.  The region can be omitted in which case it defaults
     to 'us-east-1'.
 

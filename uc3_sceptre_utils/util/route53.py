@@ -8,7 +8,9 @@ def get_hosted_zone_id(domain_name, region=DEFAULT_REGION):
     Return the hosted zoned Id corresponding to 'domain_name'.
     """
     route53_client = boto3.client('route53', region_name=region)
-    response = route53_client.list_hosted_zones()
+    response = route53_client.list_hosted_zones(
+        HostedZoneType='PrivateHostedZone'
+    )
     hosted_zones = response["HostedZones"]
     while response["IsTruncated"]:
         response = route53_client.list_hosted_zones(

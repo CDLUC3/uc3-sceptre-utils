@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "uc3-sceptre-utils"
+version = "0.1.0"
+readme = "README.md"
+homepage = "htps:/github.com/CDLUC3/uc3-sceptre-utils.git"
+authors = ["Ashley Gould <agould@ucop.edu>"]
+description = "Custom hooks and resolvers for use with sceptre"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+sceptre = "^4.4.2"
+
+# need to extract resolvers, hooks from setup.py with this syntax
+[tool.poetry.plugins."sceptre.hooks"]
+#"asg_scheduled_actions" = "sceptre.hooks.asg_scaling_processes:ASGScalingProcesses"
+
+[tool.poetry.plugins."sceptre.resolvers"]
+"ssm_parameter" = "uc3_sceptre_utils.resolvers.ssm_parameter:SsmParameter"
+"securitygroup_id_by_name" = "uc3_sceptre_utils.resolvers.secritygroup_id_by_name:SecurityGroupIdByName"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+#
+# This resolver has been superceded by sceptre-ssm-resolver
+
 import boto3
 from sceptre.resolvers import Resolver
 from sceptre.exceptions import InvalidHookArgumentSyntaxError

@@ -37,3 +37,4 @@ var/
 
 # Application specific
 demo/sceptre/var/cdl-uc3-dev.yaml
+tmp/
