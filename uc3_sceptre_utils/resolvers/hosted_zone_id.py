@@ -12,7 +12,7 @@ class HostedZoneId(Resolver):
 
     Example sceptre config usage:
 
-    HostedZoneId: !route53_hostedzone_id ashley-demo.example.com us-west-2
+    HostedZoneId: !hosted_zone_id ashley-demo.example.com us-west-2
     """
 
     def __init__(self, *args, **kwargs):

@@ -32,7 +32,17 @@ pip install -e uc3-sceptre-utils/
 
 ## Available Resolvers
 
-### !securitygroup_id_by_name
+### hosted_zone_id
+
+Returns a AWS Route53 public hosted zone Id given a domain name and a AWS region.
+```yaml
+# sceptre config
+parameters:
+  HostedZoneId: !hosted_zone_id uc3dev.cdlib.org
+
+```
+
+### securitygroup_id_by_name
 
 Given a SecurityGroup name, returns the corresponding EC2 SecurityGroupId:
 ```yaml
