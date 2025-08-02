@@ -1,0 +1,14 @@
+template:
+  path: s3_bucket.yaml
+  type: file
+
+parameters:
+  S3LogsObjectLifeSpan: '30'
+
+  # sqs queue must be available before trying to configure it here
+  S3LogsEventNotificationQueueArn: !stack_output_external uc3-ops-dev-osis-sqs::DmpOsisPipelineQueueArn
+
+  S3CloudFrontVersioning: Enabled
+
+  S3PrivateVersioning: Enabled
+

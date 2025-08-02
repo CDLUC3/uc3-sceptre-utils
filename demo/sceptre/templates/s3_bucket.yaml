@@ -6,10 +6,39 @@ Parameters:
     Type: String
     Default: "demo-bucket"
 
+  S3LogsObjectLifeSpan:
+    Type: 'Number'
+    Default: 30
+
+  # sqs queue must be available before trying to configure it here
+  S3LogsEventNotificationQueueArn:
+    Type: 'String'
+    Default: ""
+
+  S3CloudFrontVersioning:
+    Type: 'String'
+    Default: Enabled
+
+  S3PrivateVersioning:
+    Type: 'String'
+    Default: Enabled
+
+
+Conditions:
+  # If sqs queue is not defined, do not configure log event notifications
+  SetLogsEventNotifications: !Not
+    - !Equals
+      - !Ref S3LogsEventNotificationQueueArn
+      - ''
+
+
 Outputs:
   S3Bucket:
     Description: S3 log bucket for demo stack
     Value: !Ref DemoS3Bucket
+  S3BucketArn:
+    Description: Arn of S3 log bucket
+    Value: !GetAtt DemoS3Bucket.Arn
 
 Resources:
   DemoS3Bucket:
@@ -17,4 +46,53 @@ Resources:
     Properties:
       BucketName: !Sub "${MyBucketName}-${AWS::AccountId}"
       PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
         IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - ExpirationInDays: !Ref S3LogsObjectLifeSpan
+            Status: 'Enabled'
+      NotificationConfiguration:
+        !If
+          - SetLogsEventNotifications
+          -
+            QueueConfigurations:
+              - Event: s3:ObjectCreated:*
+                Queue: !Ref S3LogsEventNotificationQueueArn
+          - {}
+
+  DemoS3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref DemoS3Bucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Action: s3:GetBucketAcl
+          Condition:
+            ArnLike:
+              aws:SourceArn:
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*"
+            StringEquals:
+              aws:SourceAccount:
+              - !Sub '${AWS::AccountId}'
+          Effect: Allow
+          Principal:
+            Service: !Sub 'logs.${AWS::Region}.amazonaws.com'
+          Resource: !GetAtt DemoS3Bucket.Arn
+        - Action: s3:PutObject
+          Condition:
+            ArnLike:
+              aws:SourceArn:
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*"
+            StringEquals:
+              aws:SourceAccount:
+              - !Sub '${AWS::AccountId}'
+              s3:x-amz-acl: bucket-owner-full-control
+          Effect: Allow
+          Principal:
+            Service: !Sub 'logs.${AWS::Region}.amazonaws.com'
+          Resource: !Sub "${DemoS3Bucket.Arn}/*"
+
