@@ -8,6 +8,7 @@ This install sets up full scepter installation and requirements including:
 - boto3
 - sceptre-ssm-resolver
 - sceptre-aws-resolver
+- yq
 
 
 ### Prereqs
@@ -35,6 +36,7 @@ pip install -e uc3-sceptre-utils/
 ### hosted_zone_id
 
 Returns a AWS Route53 public hosted zone Id given a domain name and a AWS region.
+The region can be omitted in which case use the sceptre `stack_group_config.region`.
 ```yaml
 # sceptre config
 parameters:

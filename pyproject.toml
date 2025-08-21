@@ -10,6 +10,7 @@ description = "Custom hooks and resolvers for use with sceptre"
 python = "^3.11"
 sceptre = "^4.4.2"
 sceptre-ssm-resolver = "^1.2.2"
+yq = "^3.4.3"
 
 # need to extract resolvers, hooks from setup.py with this syntax
 [tool.poetry.plugins."sceptre.hooks"]
