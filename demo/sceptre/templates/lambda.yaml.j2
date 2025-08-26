@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Lambda function
+
+Parameters:
+
+  LambdaRuntime:
+    Type: String
+    Default: python3.13
+
+  LambdaFunctionName:
+    Type: String
+
+  LambdaHandlerName:
+    Type: String
+
+  #LambdaCodeBucket:
+  #  Type: String
+
+  #LambdaCodeS3Key:
+  #  Type: String
+
+
+Resources:
+
+  LambdaExecRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+          ### Content of managed policy for reference:
+          # PolicyName: AWSLambdaBasicExecutionRole
+          # Description: Provides write permissions to CloudWatch Logs.
+          # Document:
+          #   Statement:
+          #     - Action:
+          #         - logs:CreateLogGroup
+          #         - logs:CreateLogStream
+          #         - logs:PutLogEvents
+          #       Effect: Allow
+          #       Resource: '*'
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      #LogGroupName: !Join ['',['/aws/lambda/', !Ref LambdaFunctionName]]
+      LogGroupName: !Sub '/aws/lambda/${LambdaFunctionName}'
+      RetentionInDays: 30
+            
+
+  GenericLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref LambdaFunctionName
+      Runtime: !Ref LambdaRuntime
+      Role: !GetAtt LambdaExecRole.Arn
+      Handler: !Ref LambdaHandlerName
+      PackageType: 'Zip'
+      Description: "generic lambda function"
+      MemorySize: 128
+      Timeout: 300
+      #Code:
+      #  S3Bucket: !Ref LambdaCodeBucket
+      #  S3Key: !Ref LambdaCodeS3Key
+      Code:
+        ZipFile: | {%-filter indent(10)%} {%include sceptre_user_data['LambdaCodeLocalPath']%} {%endfilter%}
+
+

@@ -1,0 +1,13 @@
+template:
+  path: lambda.yaml.j2
+  type: file
+
+parameters:
+  LambdaRuntime: python3.13
+  LambdaFunctionName: kdf-transform
+  #LambdaCodeBucket: demo-bucket-671846987296
+  #LambdaCodeS3Key: lambda_code/kdf-transform.py.zip
+  LambdaHandlerName: index.lambda_handler
+
+sceptre_user_data:
+  LambdaCodeLocalPath: "data/lambda/kdf-transform.py"
