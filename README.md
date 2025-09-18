@@ -54,3 +54,37 @@ parameters:
     - !securitygroup_id_by_name default
     - !securitygroup_id_by_name dmp-tool-stg-codebuild-data-migration-SecGrp
 ```
+
+
+## Available Hooks
+
+### Account Verifier
+
+Verify the AWS Account ID before performing stack change actions.  If the configured account ID 
+differs from the active account in which secptre is executing, sceptre will fail.
+
+Set the allowed Account ID in sceptre environment config:
+```yaml
+---
+# config/dev/config.yaml
+#
+domain: uc3dev.cdlib.net
+account_id: '123412341234'
+```
+
+Run `account_verifier` hook in scepter stack config:
+```yaml
+# config/dev/aoss-security.yaml
+---
+template:
+  path: aoss-security.yaml.j2
+
+hooks:
+  before_validate:
+    - !account_verifier {{ stack_group_config.account_id }}
+  before_create:
+    - !account_verifier {{ stack_group_config.account_id }}
+  before_update:
+    - !account_verifier {{ stack_group_config.account_id }}
+
+```

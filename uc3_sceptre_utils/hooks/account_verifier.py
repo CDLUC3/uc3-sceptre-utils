@@ -10,6 +10,13 @@ class AccountVerifier(Hook):
     """
     Test if the Id of currently authenticated AWS account matches
     the specified account Id.  
+
+    Usage in stack config:
+
+        hooks:
+          before_create:
+            - !account_verifier 123412341234
+
     """
 
     def __init__(self, *args, **kwargs):
@@ -23,11 +30,16 @@ class AccountVerifier(Hook):
                  AWS Account Id.
         """
 
+        configured_account_id = str(self.argument)
+        #self.logger.info('{} - self.stack: {}'.format(__name__, self.stack))
+        #self.logger.info('{} - self.argument: {}'.format(__name__, self.argument))
+        #self.logger.info('{} - configured_account_id: {}'.format(__name__, configured_account_id))
+
         account_id_re = re.compile(r'\d{12}')
-        if not (self.argument and account_id_re.match(self.argument)):
+        if not (configured_account_id and account_id_re.match(configured_account_id)):
             raise InvalidHookArgumentSyntaxError(
                 '{}: argument "{}" is not a valid AWS account Id.'.format(
-                    __name__, self.argument
+                    __name__, configured_account_id
                 )
             )
 
@@ -35,17 +47,17 @@ class AccountVerifier(Hook):
             service="sts",
             command="get_caller_identity",
         )
-        account_id = response["Account"]
+        actual_account_id = response["Account"]
 
-        if not account_id == self.argument:
+        if not actual_account_id == configured_account_id:
             raise SceptreException(
-                '{}: account verification failed - current account "{}" does '
-                'not match specified account Id "{}".'.format(
-                    __name__, account_id, self.argument
+                '{}: account verification failed - current account {} does '
+                'not match specified account Id {}.'.format(
+                    __name__, actual_account_id, configured_account_id
                 )
             )
         else:
             self.logger.debug(
-                '{} - verification succeeded for Id {}'.format(__name__, account_id)
+                '{} - verification succeeded for Id {}'.format(__name__, actual_account_id)
             )
             return True
