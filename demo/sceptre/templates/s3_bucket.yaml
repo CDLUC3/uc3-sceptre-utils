@@ -54,6 +54,10 @@ Resources:
         Rules:
           - ExpirationInDays: !Ref S3LogsObjectLifeSpan
             Status: 'Enabled'
+          ## - Id: ICMU
+          ##   Status: Enabled
+          ##   AbortIncompleteMultipartUpload:
+          ##     DaysAfterInitiation: 5
       NotificationConfiguration:
         !If
           - SetLogsEventNotifications
